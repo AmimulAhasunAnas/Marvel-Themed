@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Float, MeshDistortMaterial, Sphere, PerspectiveCamera, Environment } from "@react-three/drei";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import * as THREE from "three";
 import { 
   Zap, 
@@ -21,7 +21,12 @@ import {
   Cpu,
   Waves,
   Crosshair,
-  Star
+  Star,
+  CloudLightning,
+  Eye,
+  Activity,
+  Bug,
+  Cat
 } from "lucide-react";
 
 // 3D Energy Core Component (ARC Reactor)
@@ -72,8 +77,6 @@ const HERO_DATA = {
   id: "anas",
   name: "MD. AMIMUL AHASUN ANAS",
   alias: "The Sentinel of Cyberspace",
-  theme: "#ED1D24",
-  core: "#48a9fe",
   identity: "Publicly Known",
   base: "Dhaka, Bangladesh / Remote",
   summary: "Analytical Cyber Security Analyst dedicated to proactive defense and enterprise-grade threat mitigation. Expert in SIEM management, EDR deployment, and Vulnerability Management. A collaborative problem-solver focused on leveraging emerging security technologies to secure critical infrastructure in evolving threat landscapes.",
@@ -178,29 +181,78 @@ const HERO_DATA = {
   }
 };
 
+const THEMES = [
+  { id: 'ironman', name: 'Iron Man', theme: '#ED1D24', core: '#48a9fe', Icon: Cpu },
+  { id: 'thor', name: 'Thor', theme: '#00D2FF', core: '#FFD700', Icon: CloudLightning },
+  { id: 'panther', name: 'Black Panther', theme: '#A330FF', core: '#FFFFFF', Icon: Cat },
+  { id: 'spiderman', name: 'Spider-Man', theme: '#E23636', core: '#5091CD', Icon: Bug },
+  { id: 'cap', name: 'Capt. America', theme: '#0047AB', core: '#FFFFFF', Icon: Shield },
+  { id: 'hulk', name: 'Hulk', theme: '#4B9B32', core: '#8A2BE2', Icon: Activity },
+  { id: 'strange', name: 'Dr. Strange', theme: '#FF4500', core: '#008080', Icon: Eye }
+];
+
 export default function App() {
+  const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
+
   return (
     <div className="min-h-screen bg-[#060606] text-white overflow-x-hidden font-sans">
       
+      {/* Theme Switcher Sidebar */}
+      <nav className="fixed right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-5">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setCurrentTheme(t)}
+            className={`w-14 h-14 rounded-2xl border-2 transition-all flex items-center justify-center overflow-hidden hover:scale-110 shadow-2xl group relative backdrop-blur-md`}
+            style={{ 
+              borderColor: currentTheme.id === t.id ? t.theme : 'rgba(255,255,255,0.1)',
+              backgroundColor: currentTheme.id === t.id ? t.theme + '44' : 'rgba(255,255,255,0.02)'
+            }}
+          >
+             <t.Icon 
+               size={24} 
+               className="transition-all duration-500 group-hover:rotate-12" 
+               style={{ color: currentTheme.id === t.id ? '#FFF' : t.theme }} 
+             />
+             <motion.div 
+               layoutId="activeTheme"
+               className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100"
+             />
+             <span className="absolute right-full mr-4 bg-black/90 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-white/10 shadow-2xl">
+               {t.name} Protocol
+             </span>
+          </button>
+        ))}
+      </nav>
+
       {/* Immersive 3D Background */}
-      <div className="fixed inset-0 -z-20">
-        <Canvas>
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-          <ambientLight intensity={0.2} />
-          <pointLight position={[10, 10, 10]} intensity={1} color={HERO_DATA.core} />
-          <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-            <Sphere args={[20, 64, 64]} scale={[-1, 1, 1]}>
-              <meshBasicMaterial color={HERO_DATA.theme} wireframe opacity={0.03} transparent />
-            </Sphere>
-          </Float>
-        </Canvas>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div 
+          key={currentTheme.id}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1 }}
+          className="fixed inset-0 -z-20"
+        >
+          <Canvas>
+            <PerspectiveCamera makeDefault position={[0, 0, 5]} />
+            <ambientLight intensity={0.2} />
+            <pointLight position={[10, 10, 10]} intensity={1} color={currentTheme.core} />
+            <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
+              <Sphere args={[20, 64, 64]} scale={[-1, 1, 1]}>
+                <meshBasicMaterial color={currentTheme.theme} wireframe opacity={0.03} transparent />
+              </Sphere>
+            </Float>
+          </Canvas>
+        </motion.div>
+      </AnimatePresence>
 
       {/* Header Panel */}
       <header 
-        className="relative h-[65vh] md:h-[80vh] flex items-center justify-center overflow-hidden border-b border-white/5"
+        className="relative h-[65vh] md:h-[80vh] flex items-center justify-center overflow-hidden border-b border-white/5 transition-colors duration-1000"
         style={{ 
-          background: `linear-gradient(to bottom, ${HERO_DATA.theme}22, #060606)`
+          background: `linear-gradient(to bottom, ${currentTheme.theme}22, #060606)`
         }}
       >
         <div className="absolute inset-0 z-0 opacity-60">
@@ -208,7 +260,7 @@ export default function App() {
             <PerspectiveCamera makeDefault position={[0, 0, 5]} />
             <ambientLight intensity={0.5} />
             <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} castShadow />
-            <EnergyCore color={HERO_DATA.theme} coreColor={HERO_DATA.core} />
+            <EnergyCore color={currentTheme.theme} coreColor={currentTheme.core} />
             <Environment preset="night" />
             <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={1} />
           </Canvas>
@@ -216,12 +268,13 @@ export default function App() {
 
         <div className="relative z-10 text-center px-4 max-w-5xl">
           <motion.div 
+            key={currentTheme.id + "_title"}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 1, type: "spring" }}
             className="inline-block bg-white px-10 py-6 -skew-x-12 shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-4 border-black mb-6 uppercase"
           >
-            <span className="font-comic text-7xl md:text-[90px] leading-[0.8] tracking-tighter" style={{ color: HERO_DATA.theme }}>
+            <span className="font-comic text-7xl md:text-[90px] leading-[0.8] tracking-tighter transition-colors duration-1000" style={{ color: currentTheme.theme }}>
               {HERO_DATA.name}
             </span>
           </motion.div>
@@ -234,19 +287,22 @@ export default function App() {
             >
               {HERO_DATA.alias}
             </motion.h2>
-            <div className="w-32 h-1 animate-pulse" style={{ backgroundColor: HERO_DATA.theme }}></div>
+            <motion.div 
+              animate={{ backgroundColor: currentTheme.theme }}
+              className="w-32 h-1 animate-pulse transition-colors duration-1000"
+            />
           </div>
         </div>
 
         {/* Identity Status HUD */}
         <div className="absolute bottom-10 left-10 text-[10px] font-mono opacity-40 space-y-2 hidden lg:block">
           <div className="flex items-center gap-2">
-            <Shield size={12} style={{ color: HERO_DATA.theme }} />
+            <Shield size={12} style={{ color: currentTheme.theme }} className="transition-colors duration-1000" />
             <span>IDENTITY.VERIFIED: {HERO_DATA.identity}</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 transition-colors duration-1000" style={{ color: currentTheme.core }}>
             <Crosshair size={12} />
-            <span>SYSTEM.LOCK: CYBER_ANALYSIS_MOD_V1</span>
+            <span>SYSTEM.LOCK: {currentTheme.id.toUpperCase()}_MOD_V3</span>
           </div>
         </div>
       </header>
@@ -262,10 +318,10 @@ export default function App() {
             className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 p-12 rounded-3xl shadow-2xl relative group"
           >
             <div className="absolute top-0 right-0 p-4 opacity-10">
-              <Cpu size={100} style={{ color: HERO_DATA.theme }} />
+              <Cpu size={100} style={{ color: currentTheme.theme }} className="transition-colors duration-1000" />
             </div>
             
-            <h3 className="font-comic text-3xl uppercase mb-10 flex items-center gap-4" style={{ color: HERO_DATA.theme }}>
+            <h3 className="font-comic text-3xl uppercase mb-10 flex items-center gap-4 transition-colors duration-1000" style={{ color: currentTheme.theme }}>
               Dossier Record
             </h3>
 
@@ -277,14 +333,14 @@ export default function App() {
               ].map((field, i) => (
                 <div key={i} className="space-y-1">
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-600">{field.label}</p>
-                  <p className={`text-sm font-bold uppercase ${field.highlight ? "" : "text-gray-300"}`} style={{ color: field.highlight ? HERO_DATA.theme : undefined }}>
+                  <p className={`text-sm font-bold uppercase transition-colors duration-1000 ${field.highlight ? "" : "text-gray-300"}`} style={{ color: field.highlight ? currentTheme.theme : undefined }}>
                     {field.value}
                   </p>
                 </div>
               ))}
             </div>
 
-            <p className="mt-12 text-sm leading-relaxed text-gray-400 font-medium italic border-l-2 pl-6" style={{ borderColor: HERO_DATA.theme }}>
+            <p className="mt-12 text-sm leading-relaxed text-gray-400 font-medium italic border-l-2 pl-6 transition-colors duration-1000" style={{ borderColor: currentTheme.theme }}>
               "{HERO_DATA.summary}"
             </p>
 
@@ -306,7 +362,7 @@ export default function App() {
 
           {/* Power Grid */}
           <div className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 p-12 rounded-3xl shadow-2xl">
-            <h3 className="font-comic text-3xl uppercase mb-12 flex items-center gap-4 text-blue-400">
+            <h3 className="font-comic text-3xl uppercase mb-12 flex items-center gap-4 transition-colors duration-1000" style={{ color: currentTheme.core }}>
               <Zap className="fill-current" /> Combat Matrix
             </h3>
             <div className="space-y-10">
@@ -314,16 +370,17 @@ export default function App() {
                 <div key={i} className="space-y-4">
                   <div className="flex justify-between items-end">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">{power.name}</span>
-                    <span className="font-mono text-xs" style={{ color: HERO_DATA.core }}>{power.level}%</span>
+                    <span className="font-mono text-xs transition-colors duration-1000" style={{ color: currentTheme.core }}>{power.level}%</span>
                   </div>
                   <div className="h-1.5 bg-white/5 rounded-full relative overflow-hidden">
                     <motion.div 
+                      key={currentTheme.id + "_power_" + i}
                       initial={{ width: 0 }}
                       whileInView={{ width: `${power.level}%` }}
                       viewport={{ once: true }}
                       transition={{ duration: 1.5, ease: "circOut" }}
-                      className="h-full relative shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-                      style={{ backgroundColor: HERO_DATA.theme }}
+                      className="h-full relative shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-colors duration-1000"
+                      style={{ backgroundColor: currentTheme.theme }}
                     />
                   </div>
                 </div>
@@ -333,7 +390,7 @@ export default function App() {
 
           {/* Technical Arsenal (Tools) */}
           <div className="backdrop-blur-3xl bg-white/[0.03] border border-white/10 p-12 rounded-3xl shadow-2xl">
-            <h3 className="font-comic text-3xl uppercase mb-12 flex items-center gap-4 text-red-500">
+            <h3 className="font-comic text-3xl uppercase mb-12 flex items-center gap-4 transition-colors duration-1000" style={{ color: currentTheme.theme }}>
               <Cpu className="fill-current" /> Arsenal Tools
             </h3>
             <div className="flex flex-wrap gap-3">
@@ -353,12 +410,12 @@ export default function App() {
           <div className="space-y-16">
             <div className="flex items-center gap-6">
               <h3 className="font-comic text-6xl uppercase tracking-tighter">Security Clearances</h3>
-              <div className="flex-1 h-[2px] opacity-20" style={{ background: `linear-gradient(to right, ${HERO_DATA.theme}, transparent)` }}></div>
+              <div className="flex-1 h-[2px] opacity-20 transition-all duration-1000" style={{ background: `linear-gradient(to right, ${currentTheme.theme}, transparent)` }}></div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {HERO_DATA.commendations.map((cert, i) => (
                 <div key={i} className="flex items-center gap-4 bg-white/5 p-6 rounded-2xl border border-white/10 hover:bg-white/10 transition-all group">
-                  <Shield size={24} style={{ color: HERO_DATA.theme }} className="shrink-0 group-hover:scale-110 transition-transform" />
+                  <Shield size={24} style={{ color: currentTheme.theme }} className="shrink-0 group-hover:scale-110 transition-transform duration-1000" />
                   <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-gray-300">{cert}</span>
                 </div>
               ))}
@@ -368,7 +425,7 @@ export default function App() {
           <div className="space-y-16">
             <div className="flex items-center gap-6">
               <h3 className="font-comic text-6xl uppercase tracking-tighter">Operational History</h3>
-              <div className="flex-1 h-[2px] opacity-20" style={{ background: `linear-gradient(to right, ${HERO_DATA.theme}, transparent)` }}></div>
+              <div className="flex-1 h-[2px] opacity-20 transition-all duration-1000" style={{ background: `linear-gradient(to right, ${currentTheme.theme}, transparent)` }}></div>
             </div>
 
             <div className="space-y-16">
@@ -381,14 +438,14 @@ export default function App() {
                   className="group relative"
                 >
                   <div 
-                    className="absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-10 shadow-[0_0_40px_rgba(255,255,255,0.5)] transition-opacity duration-500" 
-                    style={{ backgroundColor: HERO_DATA.theme }}
+                    className="absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-10 shadow-[0_0_40px_rgba(255,255,255,0.5)] transition-all duration-1000" 
+                    style={{ backgroundColor: currentTheme.theme }}
                   />
                   <div className="relative bg-[#0d0d0d] border border-white/10 p-12 rounded-3xl shadow-2xl transition-transform duration-500 group-hover:-translate-y-2">
                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
                       <div>
                         <h4 className="text-4xl font-black uppercase tracking-tight text-white mb-2">{mission.role}</h4>
-                        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em]" style={{ color: HERO_DATA.theme }}>
+                        <div className="flex items-center gap-3 text-xs font-black uppercase tracking-[0.3em] transition-colors duration-1000" style={{ color: currentTheme.theme }}>
                           <Target size={16} /> {mission.company}
                         </div>
                       </div>
@@ -406,7 +463,7 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
                         {mission.projects.map((proj, idx) => (
                           <div key={idx} className="bg-white/5 p-6 rounded-2xl border border-white/5">
-                            <h5 className="text-sm font-black uppercase tracking-widest text-white mb-2" style={{ color: HERO_DATA.core }}>{proj.title}</h5>
+                            <h5 className="text-sm font-black uppercase tracking-widest text-white mb-2 transition-colors duration-1000" style={{ color: currentTheme.core }}>{proj.title}</h5>
                             <p className="text-[10px] leading-relaxed text-gray-400 uppercase tracking-wide">{proj.desc}</p>
                           </div>
                         ))}
@@ -416,7 +473,7 @@ export default function App() {
                     <div className="mt-auto grid grid-cols-1 md:grid-cols-2 gap-4">
                       {mission.achievements.map((ach, j) => (
                         <div key={j} className="flex items-start gap-4 bg-white/5 p-4 rounded-xl border border-white/5 group-hover:border-white/20 transition-all">
-                          <Star className="shrink-0 mt-0.5" size={14} style={{ color: HERO_DATA.theme }} />
+                          <Star className="shrink-0 mt-0.5 transition-colors duration-1000" size={14} style={{ color: currentTheme.theme }} />
                           <span className="text-[11px] font-bold uppercase tracking-wide text-gray-300">{ach}</span>
                         </div>
                       ))}
@@ -430,7 +487,7 @@ export default function App() {
           {/* Education Records */}
           <div className="space-y-16">
              <div className="flex items-center justify-end gap-6 text-right">
-              <div className="flex-1 h-[2px] opacity-20" style={{ background: `linear-gradient(to left, ${HERO_DATA.theme}, transparent)` }}></div>
+              <div className="flex-1 h-[2px] opacity-20 transition-all duration-1000" style={{ background: `linear-gradient(to left, ${currentTheme.theme}, transparent)` }}></div>
               <h3 className="font-comic text-6xl uppercase tracking-tighter">Academic Origin</h3>
             </div>
             
@@ -441,10 +498,10 @@ export default function App() {
                   whileHover={{ y: -5 }}
                   className="p-10 rounded-3xl bg-white/[0.02] border border-white/10 hover:border-white/30 transition-all shadow-xl group"
                 >
-                  <Trophy className="mb-6 transition-transform group-hover:scale-125" size={32} style={{ color: HERO_DATA.theme }} />
+                  <Trophy className="mb-6 transition-transform group-hover:scale-125 duration-1000" size={32} style={{ color: currentTheme.theme }} />
                   <h4 className="text-2xl font-black uppercase mb-3 text-white leading-tight">{edu.school}</h4>
                   <p className="text-sm font-bold opacity-60 mb-6 uppercase tracking-widest">{edu.degree}</p>
-                  <div className="h-px w-16 mb-6 transition-all group-hover:w-full opacity-20" style={{ backgroundColor: HERO_DATA.theme }}></div>
+                  <div className="h-px w-16 mb-6 transition-all group-hover:w-full opacity-20 duration-1000" style={{ backgroundColor: currentTheme.theme }}></div>
                   <p className="text-[10px] font-mono text-gray-600 uppercase tracking-widest">{edu.year}</p>
                 </motion.div>
               ))}
@@ -458,13 +515,13 @@ export default function App() {
       </main>
 
       {/* Action Footer */}
-      <footer className="relative py-40 border-t border-white/5 bg-gradient-to-t from-black to-transparent overflow-hidden text-center">
+      <footer className="relative py-40 border-t border-white/5 bg-gradient-to-t from-black to-transparent overflow-hidden text-center transition-all duration-1000" style={{ borderColor: currentTheme.theme + '22' }}>
         <div className="absolute inset-0 pointer-events-none opacity-20">
           <Canvas>
              <Float speed={2} rotationIntensity={2} floatIntensity={2}>
                 <mesh>
                    <octahedronGeometry args={[5, 0]} />
-                   <meshBasicMaterial color={HERO_DATA.theme} wireframe />
+                   <meshBasicMaterial color={currentTheme.theme} wireframe />
                 </mesh>
              </Float>
           </Canvas>
@@ -481,13 +538,13 @@ export default function App() {
           >
             Initiate Contact
             <div 
-              className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-2xl -z-10"
-              style={{ backgroundColor: HERO_DATA.theme }}
+              className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-2xl -z-10 transition-all duration-1000"
+              style={{ backgroundColor: currentTheme.theme }}
             />
           </a>
           
           <p className="mt-12 font-mono text-[10px] text-gray-600 tracking-[0.5em] uppercase">
-            System Protocol Active &mdash; {HERO_DATA.id.toUpperCase()}_LINK_STABLE
+            System Protocol Active &mdash; {currentTheme.id.toUpperCase()}_LINK_STABLE
           </p>
         </motion.div>
       </footer>
