@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Inter:wght@400;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-marvel-red: #ED1D24;
+  --color-marvel-black: #151515;
+  --color-marvel-white: #FFFFFF;
+  
+  --font-comic: "Bangers", system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-marvel-black text-marvel-white font-sans;
+  }
+}
